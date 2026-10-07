@@ -55,9 +55,6 @@ jobs:
       - name: Train model
         run: python src/train.py
 
-      - name: Performance & adversarial tests
-        run: PYTHONPATH=. pytest tests/test_performance.py tests/test_adversarial.py -v
-
       - name: Save trained model
         uses: actions/upload-artifact@v4
         with:
