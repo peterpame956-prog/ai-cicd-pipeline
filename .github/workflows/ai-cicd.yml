@@ -30,10 +30,10 @@ jobs:
         run: python src/data_pipeline.py
 
       - name: Run unit tests
-        run: pytest tests/ -v
+        run: PYTHONPATH=. pytest tests/ -v
 
       - name: Run integration tests
-        run: pytest tests/test_integration.py -v
+        run: PYTHONPATH=. pytest tests/test_integration.py -v
 
   train-and-validate:
     needs: data-and-tests
@@ -56,7 +56,7 @@ jobs:
         run: python src/train.py
 
       - name: Performance & adversarial tests
-        run: pytest tests/test_performance.py tests/test_adversarial.py -v
+        run: PYTHONPATH=. pytest tests/test_performance.py tests/test_adversarial.py -v
 
       - name: Save trained model
         uses: actions/upload-artifact@v4
