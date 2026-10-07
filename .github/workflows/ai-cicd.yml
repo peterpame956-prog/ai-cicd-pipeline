@@ -1,0 +1,90 @@
+name: AI Model CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  data-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Security scan
+        run: pip-audit -r requirements.txt
+
+      - name: Generate dataset
+        run: python src/data_pipeline.py
+
+      - name: Run unit tests
+        run: pytest tests/test_unit.py -v
+      - name: Run integration tests
+        run: pytest tests/test_integration.py -v
+
+  train-and-validate:
+    needs: data-and-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Start MLflow background service
+        run: mlflow ui --host 127.0.0.1 --port 5000 &
+
+      - name: Run data pipeline
+        run: python src/data_pipeline.py
+      - name: Train model
+        run: python src/train.py
+
+      - name: Performance & adversarial tests
+        run: pytest tests/test_performance.py tests/test_adversarial.py -v
+
+      - name: Save trained model
+        uses: actions/upload-artifact@v4
+        with:
+          name: trained-model
+          path: src/model.joblib
+
+  build-and-push-image:
+    needs: train-and-validate
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download trained model
+        uses: actions/download-artifact@v4
+        with:
+          name: trained-model
+          path: src
+
+      - name: Login to GHCR
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ shturl.cc/Ul }} --password-stdin
+
+      - name: Build and push docker image
+        run: |
+          docker build -t ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }} .
+          docker push ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:${{ github.sha }}
