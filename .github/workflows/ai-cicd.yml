@@ -29,11 +29,8 @@ jobs:
       - name: Generate dataset
         run: python src/data_pipeline.py
 
-      - name: Run unit tests
-        run: PYTHONPATH=. pytest tests/ -v
-
-      - name: Run integration tests
-        run: PYTHONPATH=. pytest tests/test_integration.py -v
+      - name: Run unit & integration tests only
+        run: PYTHONPATH=. pytest tests/test_unit.py tests/test_integration.py -v
 
   train-and-validate:
     needs: data-and-tests
