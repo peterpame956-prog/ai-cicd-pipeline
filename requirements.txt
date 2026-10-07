@@ -1,0 +1,8 @@
+flask
+scikit-learn
+numpy
+joblib
+prometheus-flask-exporter
+pytest
+mlflow
+pip-audit
