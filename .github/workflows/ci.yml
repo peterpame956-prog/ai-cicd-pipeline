@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  data-and-tests:
+  full-pipeline:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -32,23 +32,6 @@ jobs:
       - name: Run unit & integration tests only
         run: PYTHONPATH=. pytest tests/test_unit.py tests/test_integration.py -v
 
-  train-and-validate:
-    needs: data-and-tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Train model
         run: python src/train.py
 
@@ -59,7 +42,7 @@ jobs:
           path: src/model.joblib
 
   build-and-push-image:
-    needs: train-and-validate
+    needs: full-pipeline
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -77,7 +60,7 @@ jobs:
       - name: Login to GHCR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ shturl.cc/HB }} --password-stdin
+        run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ shturl.cc/Pw }} --password-stdin
 
       - name: Build and push docker image
         run: |
