@@ -6,3 +6,7 @@ prometheus-flask-exporter
 pytest
 mlflow
 pip-audit
+pandas
+scikit-learn
+joblib
+pytest
