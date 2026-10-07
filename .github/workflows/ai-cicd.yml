@@ -82,7 +82,7 @@ jobs:
       - name: Login to GHCR
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ shturl.cc/Ul }} --password-stdin
+        run: echo "${GITHUB_TOKEN}" | docker login ghcr.io -u ${{ github.repository_owner }} --password-stdin
 
       - name: Build and push docker image
         run: |
